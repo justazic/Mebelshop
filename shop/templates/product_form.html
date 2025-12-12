@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title|default:"Mahsulot formasi" }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">{{ title|default:"Mahsulot formasi" }}</h3>
+            </div>
+            
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <strong>Xatolik!</strong> Iltimos, quyidagi xatoliklarni tuzating.
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <!-- Ism -->
+                        <div class="col-md-6 mb-3">
+                            <label for="id_name" class="form-label">Mahsulot nomi *</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                            <div class="text-danger">{{ form.name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Kategoriya -->
+                        <div class="col-md-6 mb-3">
+                            <label for="id_category" class="form-label">Kategoriya *</label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                            <div class="text-danger">{{ form.category.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <!-- Narx -->
+                        <div class="col-md-6 mb-3">
+                            <label for="id_price" class="form-label">Narx (so'm) *</label>
+                            {{ form.price }}
+                            {% if form.price.errors %}
+                            <div class="text-danger">{{ form.price.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Rasm -->
+                        <div class="col-md-6 mb-3">
+                            <label for="id_image" class="form-label">Rasm</label>
+                            {{ form.image }}
+                            {% if form.image.errors %}
+                            <div class="text-danger">{{ form.image.errors }}</div>
+                            {% endif %}
+                            
+                            {% if product and product.image %}
+                            <div class="mt-2">
+                                <p>Joriy rasm:</p>
+                                <img src="{{ product.image.url }}" width="100" class="img-thumbnail">
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Tavsif -->
+                    <div class="mb-3">
+                        <label for="id_description" class="form-label">Batafsil tavsif *</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                        <div class="text-danger">{{ form.description.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Faol -->
+                    <div class="mb-3 form-check">
+                        {{ form.is_active }}
+                        <label class="form-check-label" for="id_is_active">
+                            Mahsulot faol (sotuvda)
+                        </label>
+                    </div>
+                    
+                    <!-- Tugmalar -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'home' %}" class="btn btn-secondary">
+                            Bekor qilish
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            {{ product|yesno:"Saqlash,Qo'shish" }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Form styling uchun CSS -->
+<style>
+    input, select, textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    .form-check-input {
+        width: auto;
+        margin-right: 10px;
+    }
+</style>
+{% endblock %}

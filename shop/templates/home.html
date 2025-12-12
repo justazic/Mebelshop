@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Bosh sahifa{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-5">Yangi mahsulotlar</h1>
+        <p class="lead">Eng yaxshi mebel buyumlarini bizdan toping</p>
+        
+        {% if query %}
+        <div class="alert alert-info">
+            "{{ query }}" bo'yicha qidiruvingiz natijalari:
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    {% if products %}
+        {% for product in products %}
+        <div class="col-md-4 col-lg-3 mb-4">
+            <div class="card product-card">
+                {% if product.image %}
+                <img src="{{ product.image.url }}" class="card-img-top product-img" alt="{{ product.name }}">
+                {% else %}
+                <img src="https://via.placeholder.com/300x200?text=No+Image" class="card-img-top product-img" alt="No Image">
+                {% endif %}
+                
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.name|truncatechars:30 }}</h5>
+                    <p class="card-text text-muted small">
+                        {{ product.category.name }}
+                    </p>
+                    <p class="card-text">
+                        {{ product.description|truncatechars:50 }}
+                    </p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="text-success mb-0">{{ product.price }} so'm</h5>
+                        <a href="{% url 'product_detail' product.id %}" class="btn btn-primary btn-sm">
+                            Ko'rish
+                        </a>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top-0">
+                    <small class="text-muted">
+                        {{ product.created_at|date:"d.m.Y" }}
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-warning text-center">
+            <h4>Hozircha mahsulotlar mavjud emas</h4>
+            <p>Birinchi mahsulotni <a href="{% url 'add_product' %}">qo'shing</a></p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Mahsulot soni -->
+<div class="mt-4">
+    <div class="alert alert-light border">
+        Jami: <strong>{{ products.count }}</strong> ta mahsulot
+    </div>
+</div>
+{% endblock %}
