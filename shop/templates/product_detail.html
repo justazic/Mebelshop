@@ -1,94 +1,743 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}{{ product.name }} Detali{% endblock %}
+{% block title %}{{ product.name }} - Detallar{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    
-    <div class="col-12">
-        <nav aria-label="breadcrumb" class="mb-3">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none">Bosh sahifa</a></li>
-                <li class="breadcrumb-item">
-                    <a href="{% url 'category_products' product.category.id %}" class="text-decoration-none">
-                        {{ product.category.name }}
-                    </a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
-            </ol>
-        </nav>
-    </div>
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{% url 'home' %}" class="text-decoration-none d-flex align-items-center">
+                    <i class="fas fa-home me-2"></i>Bosh sahifa
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'category_products' product.category.id %}" class="text-decoration-none d-flex align-items-center">
+                    <i class="fas fa-folder me-2"></i>{{ product.category.name }}
+                </a>
+            </li>
+            <li class="breadcrumb-item active d-flex align-items-center">
+                <i class="fas fa-info-circle me-2"></i>{{ product.name|truncatechars:30 }}
+            </li>
+        </ol>
+    </nav>
 
-    <div class="col-12">
-        <div class="card shadow-sm border-0 p-4 mb-4">
-            
-            <h1 class="display-5 fw-bold mb-3">{{ product.name }}</h1>
-            
-            <div class="mb-3">
-                <span class="badge bg-primary fs-6 me-2">{{ product.category.name }}</span>
-                {% if product.is_active %}
-                <span class="badge bg-success">Sotuvda mavjud</span>
-                {% else %}
-                <span class="badge bg-danger">Sotuvda mavjud emas</span>
-                {% endif %}
-            </div>
-
-            <h2 class="text-success mb-4 border-bottom pb-2">{{ product.price }} so'm</h2>
-            
-            <div class="row justify-content-center">
-                <div class="col-md-10 col-lg-8 mb-4 text-center">
+    <!-- Product Details -->
+    <div class="row g-4">
+        <!-- Left Column - Image -->
+        <div class="col-lg-5">
+            <div class="card product-image-card border-0 shadow-lg rounded-4 overflow-hidden h-100">
+                <div class="product-image-wrapper bg-gradient-light">
                     {% if product.image %}
-                    <img src="{{ product.image.url }}" class="img-fluid rounded shadow" alt="{{ product.name }}">
+                        <img src="{{ product.image.url }}" class="img-fluid p-4" alt="{{ product.name }}" 
+                             id="mainProductImage" style="cursor: pointer;" onclick="openImageModal('{{ product.image.url }}')">
                     {% else %}
-                    <img src="https://via.placeholder.com/800x600?text=Rasm+Mavjud+Emas" class="img-fluid rounded shadow" alt="Rasm yo'q">
+                        <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted p-5">
+                            <i class="fas fa-image fa-5x mb-3 opacity-50"></i>
+                            <p class="fs-5">Rasm mavjud emas</p>
+                        </div>
                     {% endif %}
                 </div>
-            </div>
-            <div class="mt-3 p-3 border rounded bg-light">
-                <h5>Tavsif:</h5>
-                <p class="card-text">{{ product.description|linebreaksbr }}</p>
-            </div>
-
-            <div class="mt-4 small text-muted">
-                <p class="mb-0"><strong>Yaratilgan:</strong> {{ product.created_at|date:"d.m.Y H:i" }}</p>
-                <p><strong>Yangilangan:</strong> {{ product.updated_at|date:"d.m.Y H:i" }}</p>
-            </div>
-            
-            <div class="d-grid gap-2 d-md-flex justify-content-start mt-4 border-top pt-3">
-                <a href="{% url 'edit_product' product.pk %}" class="btn btn-warning btn-lg">
-                    ✏️ Tahrirlash
-                </a>
                 
-                <button type="button" class="btn btn-danger btn-lg" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">
-                    🗑️ O'chirish
+                <!-- Image Thumbnails (if multiple images) -->
+                <div class="p-3 border-top">
+                    <div class="d-flex justify-content-center gap-2">
+                        <button class="btn btn-sm btn-outline-primary rounded-circle">
+                            <i class="fas fa-share-alt"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary rounded-circle" onclick="downloadImage()">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary rounded-circle" onclick="printPage()">
+                            <i class="fas fa-print"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Product Info -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-lg rounded-4 h-100">
+                <div class="card-body p-4 p-md-5">
+                    <!-- Product Header -->
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <div class="d-flex flex-wrap gap-2 mb-2">
+                                <span class="badge rounded-pill bg-primary px-3 py-2">
+                                    <i class="fas fa-tag me-1"></i>{{ product.category.name }}
+                                </span>
+                                {% if product.is_active %}
+                                    <span class="badge rounded-pill bg-success px-3 py-2">
+                                        <i class="fas fa-check-circle me-1"></i>Mavjud
+                                    </span>
+                                {% else %}
+                                    <span class="badge rounded-pill bg-danger px-3 py-2">
+                                        <i class="fas fa-times-circle me-1"></i>Mavjud emas
+                                    </span>
+                                {% endif %}
+                            </div>
+                            
+                            <h1 class="display-6 fw-bold mb-3 text-dark">{{ product.name }}</h1>
+                        </div>
+                        
+                        <!-- Wishlist Button -->
+                        <button class="btn btn-outline-danger btn-lg rounded-circle" data-bs-toggle="tooltip" title="Sevimlilarga qo'shish">
+                            <i class="far fa-heart"></i>
+                        </button>
+                    </div>
+
+                    <!-- Price Section -->
+                    <div class="price-container bg-gradient-primary text-white p-4 rounded-4 mb-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="mb-1 opacity-75">Umumiy narx</p>
+                                <h2 class="display-5 fw-bold mb-0">
+                                    {{ product.price|floatformat:0 }}
+                                    <small class="fs-4">so'm</small>
+                                </h2>
+                                <p class="mb-0 mt-2 opacity-75">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    QQS bilan
+                                </p>
+                            </div>
+                            <div class="text-end">
+                                <div class="rating-display mb-2">
+                                    {% with avg_rating=product.get_average_rating %}
+                                    {% for i in "12345" %}
+                                        <i class="fas fa-star {% if forloop.counter <= avg_rating %}text-warning{% else %}text-white opacity-50{% endif %}"></i>
+                                    {% endfor %}
+                                    <span class="ms-2 fs-5">{{ avg_rating|default:"0.0" }}/5</span>
+                                    {% endwith %}
+                                </div>
+                                <p class="mb-0 opacity-75">{{ comments.count }} ta izoh</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <h5 class="d-flex align-items-center mb-3">
+                            <span class="icon-wrapper bg-primary me-3">
+                                <i class="fas fa-align-left text-white"></i>
+                            </span>
+                            Mahsulot tavsifi
+                        </h5>
+                        <div class="bg-light p-4 rounded-3">
+                            <p class="mb-0 fs-5 lh-lg">{{ product.description|linebreaksbr }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Meta Information -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="info-card d-flex align-items-center p-3 rounded-3 border">
+                                <div class="icon-wrapper bg-info me-3">
+                                    <i class="fas fa-user text-white"></i>
+                                </div>
+                                <div>
+                                    <p class="mb-0 text-muted small">Yuklovchi</p>
+                                    <p class="mb-0 fw-bold">{{ product.user.username }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-card d-flex align-items-center p-3 rounded-3 border">
+                                <div class="icon-wrapper bg-warning me-3">
+                                    <i class="fas fa-calendar-alt text-white"></i>
+                                </div>
+                                <div>
+                                    <p class="mb-0 text-muted small">Yangilangan</p>
+                                    <p class="mb-0 fw-bold">{{ product.updated_at|date:"d.m.Y H:i" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="border-top pt-4">
+                        <div class="d-flex flex-wrap gap-3">
+                            {% if request.user == product.user %}
+                                <a href="{% url 'edit_product' product.pk %}" class="btn btn-lg px-4 rounded-pill shadow-sm" 
+                                   style="background: linear-gradient(135deg, #ffc107, #e0a800); border: none; color: #000;">
+                                    <i class="fas fa-edit me-2"></i>Tahrirlash
+                                </a>
+                                <button type="button" class="btn btn-lg px-4 rounded-pill shadow-sm" 
+                                        style="background: linear-gradient(135deg, #dc3545, #c82333); border: none; color: white;"
+                                        data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">
+                                    <i class="fas fa-trash-alt me-2"></i>O'chirish
+                                </button>
+                            {% endif %}
+                            <a href="{% url 'category_products' product.category.id %}" 
+                               class="btn btn-outline-secondary btn-lg px-4 rounded-pill shadow-sm">
+                                <i class="fas fa-arrow-left me-2"></i>Orqaga
+                            </a>
+                            <button class="btn btn-outline-primary btn-lg px-4 rounded-pill shadow-sm ms-auto" onclick="shareProduct()">
+                                <i class="fas fa-share me-2"></i>Ulashish
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comments Section -->
+    <div class="mt-5 pt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold mb-0">
+                    <i class="fas fa-comments text-primary me-2"></i>
+                    Fikrlar va baholar
+                </h3>
+                <p class="text-muted mb-0">{{ comments.count }} ta izoh</p>
+            </div>
+            <div>
+                <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="collapse" href="#commentForm">
+                    <i class="fas fa-plus me-2"></i>Izoh qo'shish
                 </button>
-
-                <a href="{% url 'category_products' product.category.id %}" class="btn btn-outline-secondary btn-lg">
-                    ← Kategoriyaga qaytish
-                </a>
             </div>
+        </div>
+
+        <!-- Add Comment Form -->
+        {% if request.user.is_authenticated %}
+        <div class="collapse {% if form.errors %}show{% endif %}" id="commentForm">
+            <div class="card border-0 shadow-lg mb-4 rounded-4">
+                <div class="card-header bg-gradient-primary text-white py-3 rounded-top-4">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        Fikringizni bildiring
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data" id="commentForm">
+                        {% csrf_token %}
+                        
+                        <!-- Rating -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold mb-3">Baho bering:</label>
+                            <div class="rating-input">
+                                <div class="stars d-flex justify-content-center">
+                                    {% for i in "12345" %}
+                                    <input type="radio" name="rate" value="{{ i }}" id="star{{ i }}" {% if i == "5" %}checked{% endif %}>
+                                    <label for="star{{ i }}" class="star-label">
+                                        <i class="far fa-star"></i>
+                                        <span class="star-number">{{ i }}</span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                                <div class="text-center mt-2">
+                                    <span class="text-muted" id="ratingText">5 yulduz - Ajoyib</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Comment -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Fikringiz:</label>
+                            <textarea name="text" class="form-control" rows="4" 
+                                      placeholder="Mahsulot sifatini baholang va tajribangizni baham ko'ring..." 
+                                      required style="resize: none;"></textarea>
+                        </div>
+
+                        <!-- Image Upload -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Rasm qo'shish (ixtiyoriy):</label>
+                            <div class="file-upload-area border-2 border-dashed rounded-3 p-4 text-center">
+                                <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-3"></i>
+                                <p class="mb-2">Rasmni bu yerga tortib tashlang yoki</p>
+                                <input type="file" name="image_comment" class="d-none" id="imageUpload" accept="image/*">
+                                <label for="imageUpload" class="btn btn-outline-primary rounded-pill px-4">
+                                    <i class="fas fa-folder-open me-2"></i>Fayl tanlash
+                                </label>
+                                <p class="text-muted small mt-2">PNG, JPG, JPEG (Maks. 5MB)</p>
+                            </div>
+                        </div>
+
+                        <div class="text-end">
+                            <button type="reset" class="btn btn-outline-secondary me-2 rounded-pill px-4">Tozalash</button>
+                            <button type="submit" class="btn btn-primary rounded-pill px-4">
+                                <i class="fas fa-paper-plane me-2"></i>Yuborish
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Comments List -->
+        <div class="row g-4">
+            {% if comments %}
+                {% for comment in comments %}
+                <div class="col-12">
+                    <div class="card comment-card border-0 shadow-sm rounded-4 overflow-hidden">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="user-avatar me-3">
+                                        {% if comment.user.profile_image %}
+                                            <img src="{{ comment.user.profile_image.url }}" class="rounded-circle" 
+                                                 width="50" height="50" alt="{{ comment.user.username }}">
+                                        {% else %}
+                                            <div class="avatar-placeholder rounded-circle d-flex align-items-center justify-content-center"
+                                                 style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; font-weight: bold;">
+                                                {{ comment.user.username|slice:":1"|upper }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-bold">{{ comment.user.username }}</h6>
+                                        <small class="text-muted">
+                                            <i class="far fa-clock me-1"></i>
+                                            {{ comment.created_at|date:"d.m.Y H:i" }}
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <!-- Edit/Delete for own comments -->
+                                {% if request.user == comment.user %}
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light rounded-circle" type="button" 
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+                                        <li>
+                                            <a class="dropdown-item text-primary" href="{% url 'edit_comment' comment.pk %}">
+                                                <i class="fas fa-edit me-2"></i>Tahrirlash
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <a class="dropdown-item text-danger" href="{% url 'delete_comment' comment.pk %}" 
+                                               onclick="return confirm('Izohni o\'chirishni tasdiqlaysizmi?')">
+                                                <i class="fas fa-trash me-2"></i>O'chirish
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Rating -->
+                            <div class="rating mb-3">
+                                {% for i in "12345" %}
+                                    <i class="fas fa-star {% if forloop.counter <= comment.rate %}text-warning{% else %}text-muted{% endif %}"></i>
+                                {% endfor %}
+                                <span class="ms-2 fw-bold">{{ comment.rate }}/5</span>
+                            </div>
+
+                            <!-- Comment Text -->
+                            <p class="fs-5 mb-3">{{ comment.text|linebreaksbr }}</p>
+
+                            <!-- Comment Image -->
+                            {% if comment.image_comment %}
+                            <div class="comment-image mt-3">
+                                <img src="{{ comment.image_comment.url }}" 
+                                     class="img-thumbnail rounded-3 shadow-sm" 
+                                     style="max-width: 300px; cursor: pointer;"
+                                     onclick="openImageModal('{{ comment.image_comment.url }}')"
+                                     alt="Izoh rasmi">
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                        <div class="card-body text-center py-5">
+                            <i class="far fa-comments fa-4x text-muted mb-3"></i>
+                            <h5 class="text-muted mb-2">Hozircha izohlar yo'q</h5>
+                            <p class="text-muted">Birinchi bo'lib fikringizni bildiring!</p>
+                            {% if not request.user.is_authenticated %}
+                            <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary rounded-pill px-4 mt-2">
+                                <i class="fas fa-sign-in-alt me-2"></i>Kirish va izoh qoldirish
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title" id="deleteConfirmModalLabel">Mahsulotni o'chirish</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 bg-gradient-danger text-white rounded-top-4">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Tasdiqlash
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <p>Siz rostdan ham <strong>"{{ product.name }}"</strong> mahsulotini o'chirmoqchimisiz?</p>
-                <p class="text-danger fw-bold">Bu amalni bekor qilib bo'lmaydi!</p>
+            <div class="modal-body text-center py-4">
+                <i class="fas fa-trash-alt fa-4x text-danger mb-3"></i>
+                <h5 class="fw-bold mb-3">"{{ product.name }}" mahsulotini o'chirmoqchimisiz?</h5>
+                <p class="text-muted">Bu amalni qaytarib bo'lmaydi. Barcha bog'liq ma'lumotlar ham o'chib ketadi.</p>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
-                <a href="{% url 'delete_product' product.pk %}" class="btn btn-danger">
-                    Ha, O'chirish
-                </a>
+            <div class="modal-footer border-0 bg-light rounded-bottom-4">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Bekor qilish
+                </button>
+                <form action="{% url 'delete_product' product.pk %}" method="POST" class="mb-0">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger rounded-pill px-4">
+                        <i class="fas fa-trash-alt me-2"></i>O'chirish
+                    </button>
+                </form>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Image Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 bg-transparent">
+            <div class="modal-body p-0 position-relative">
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" 
+                        style="z-index: 1;" data-bs-dismiss="modal"></button>
+                <img id="modalImage" src="" class="img-fluid rounded-4 shadow-lg">
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Custom Styles */
+    .breadcrumb {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 15px;
+        padding: 1rem 1.5rem;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    .breadcrumb-item a {
+        color: #4e73df;
+        transition: all 0.3s;
+    }
+    
+    .breadcrumb-item a:hover {
+        color: #2e59d9;
+        transform: translateY(-1px);
+    }
+    
+    .product-image-card {
+        transition: transform 0.3s ease;
+    }
+    
+    .product-image-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .product-image-wrapper {
+        min-height: 400px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+    
+    .bg-gradient-light {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    }
+    
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .price-container {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .price-container::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 1%, transparent 1%);
+        background-size: 10px 10px;
+        opacity: 0.1;
+    }
+    
+    .icon-wrapper {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .info-card {
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .info-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .comment-card {
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .comment-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    
+    .avatar-placeholder {
+        width: 50px;
+        height: 50px;
+    }
+    
+    /* Star Rating Input */
+    .rating-input input {
+        display: none;
+    }
+    
+    .rating-input .stars {
+        gap: 5px;
+    }
+    
+    .star-label {
+        cursor: pointer;
+        position: relative;
+        color: #ddd;
+        font-size: 2.5rem;
+        transition: all 0.2s;
+    }
+    
+    .star-label:hover,
+    .star-label:hover ~ .star-label,
+    .rating-input input:checked ~ .star-label {
+        color: #ffc107;
+    }
+    
+    .star-number {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 0.8rem;
+        color: white;
+        font-weight: bold;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    
+    .star-label:hover .star-number,
+    .rating-input input:checked ~ .star-label .star-number {
+        opacity: 1;
+    }
+    
+    /* File Upload Area */
+    .file-upload-area {
+        border-color: #dee2e6 !important;
+        background: #f8f9fa;
+        transition: all 0.3s;
+    }
+    
+    .file-upload-area:hover {
+        border-color: #667eea !important;
+        background: #f0f4ff;
+    }
+    
+    .border-dashed {
+        border-style: dashed !important;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .display-5 {
+            font-size: 2.5rem;
+        }
+        
+        .price-container h2 {
+            font-size: 2.5rem;
+        }
+        
+        .star-label {
+            font-size: 2rem;
+        }
+    }
+    
+    /* Animation */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .product-image-card,
+    .comment-card {
+        animation: fadeIn 0.6s ease-out;
+    }
+    
+    /* Scrollbar Styling */
+    .comment-image::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    
+    .comment-image::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .comment-image::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 10px;
+    }
+    
+    .comment-image::-webkit-scrollbar-thumb:hover {
+        background: #a1a1a1;
+    }
+    
+    /* Print Styles */
+    @media print {
+        .btn, .dropdown, .modal, .breadcrumb {
+            display: none !important;
+        }
+    }
+</style>
+
+<script>
+    // Image Modal Function
+    function openImageModal(src) {
+        document.getElementById('modalImage').src = src;
+        const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+        modal.show();
+    }
+    
+    // Share Product
+    function shareProduct() {
+        if (navigator.share) {
+            navigator.share({
+                title: '{{ product.name }}',
+                text: '{{ product.description|truncatechars:100 }}',
+                url: window.location.href
+            });
+        } else {
+            // Fallback for browsers that don't support Web Share API
+            navigator.clipboard.writeText(window.location.href);
+            alert('Havola nusxalandi!');
+        }
+    }
+    
+    // Download Image
+    function downloadImage() {
+        const imageUrl = '{{ product.image.url|default:"" }}';
+        if (imageUrl) {
+            const link = document.createElement('a');
+            link.href = imageUrl;
+            link.download = '{{ product.name|slugify }}.jpg';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    }
+    
+    // Print Page
+    function printPage() {
+        window.print();
+    }
+    
+    // Star Rating Text
+    document.addEventListener('DOMContentLoaded', function() {
+        const ratingInputs = document.querySelectorAll('.rating-input input');
+        const ratingText = document.getElementById('ratingText');
+        
+        const ratingTexts = {
+            '1': '1 yulduz - Juda yomon',
+            '2': '2 yulduz - Yomon',
+            '3': '3 yulduz - O\'rtacha',
+            '4': '4 yulduz - Yaxshi',
+            '5': '5 yulduz - Ajoyib'
+        };
+        
+        ratingInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                ratingText.textContent = ratingTexts[this.value];
+            });
+        });
+        
+        // File Upload Preview
+        const fileInput = document.getElementById('imageUpload');
+        const fileUploadArea = document.querySelector('.file-upload-area');
+        
+        if (fileInput) {
+            fileInput.addEventListener('change', function(e) {
+                if (this.files && this.files[0]) {
+                    const fileName = this.files[0].name;
+                    fileUploadArea.innerHTML = `
+                        <div class="d-flex align-items-center justify-content-center">
+                            <i class="fas fa-check-circle text-success fa-2x me-3"></i>
+                            <div>
+                                <p class="mb-0 fw-bold">${fileName}</p>
+                                <small class="text-muted">${(this.files[0].size / 1024).toFixed(1)} KB</small>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            // Drag and drop functionality
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                fileUploadArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                fileUploadArea.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                fileUploadArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                fileUploadArea.style.borderColor = '#667eea';
+                fileUploadArea.style.background = '#f0f4ff';
+            }
+            
+            function unhighlight() {
+                fileUploadArea.style.borderColor = '#dee2e6';
+                fileUploadArea.style.background = '#f8f9fa';
+            }
+            
+            fileUploadArea.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                fileInput.files = files;
+                fileInput.dispatchEvent(new Event('change'));
+            }
+        }
+        
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
 {% endblock %}

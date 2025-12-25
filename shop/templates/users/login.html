@@ -1,67 +1,419 @@
 {% extends 'base.html' %}
 
-{% block title %}Kirish{% endblock %}
+{% block title %}Kirish - Mebel Do'koni{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center align-items-center" style="min-height: 70vh;">
-    <div class="col-md-5">
-        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-            <div class="card-body p-5">
-                <div class="text-center mb-4">
-                    <h2 class="fw-bold text-primary">Xush kelibsiz!</h2>
-                    <p class="text-muted">Profilingizga kirish uchun ma'lumotlarni kiriting</p>
-                </div>
-                
-                <form method="POST">
-                    {% csrf_token %}
-                    {% for field in form %}
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-uppercase text-secondary">{{ field.label }}</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0">🔑</span>
-                            {{ field }}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-xl-5 col-lg-6 col-md-8">
+            <!-- Login Card -->
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <!-- Gradient Header -->
+                <div class="card-header bg-gradient-primary text-white text-center py-4">
+                    <div class="avatar-wrapper mb-3">
+                        <div class="rounded-circle bg-white d-flex align-items-center justify-content-center mx-auto" 
+                             style="width: 70px; height: 70px;">
+                            <i class="fas fa-door-open text-primary fa-2x"></i>
                         </div>
-                        {% if field.errors %}
-                            <div class="text-danger small mt-1">{{ field.errors|striptags }}</div>
-                        {% endif %}
                     </div>
-                    {% endfor %}
+                    <h3 class="fw-bold mb-1">Xush kelibsiz!</h3>
+                    <p class="mb-0 opacity-75">Hisobingizga kirish uchun ma'lumotlaringizni kiriting</p>
+                </div>
 
-                    <div class="d-grid gap-2 mt-4">
-                        <button type="submit" class="btn btn-primary btn-lg rounded-3 fw-bold py-3 shadow-sm">
-                            Tizimga kirish
-                        </button>
+                <div class="card-body p-4 p-md-5">
+                    <!-- Xabarlar -->
+                    {% if messages %}
+                    <div class="mb-4">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            <div class="d-flex align-items-center">
+                                <i class="fas 
+                                    {% if message.tags == 'success' %}fa-check-circle
+                                    {% elif message.tags == 'error' or message.tags == 'danger' %}fa-exclamation-circle
+                                    {% elif message.tags == 'warning' %}fa-exclamation-triangle
+                                    {% else %}fa-info-circle{% endif %}
+                                    me-2"></i>
+                                <div>{{ message }}</div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
                     </div>
-                </form>
+                    {% endif %}
 
-                <div class="text-center mt-4">
-                    <p class="text-muted small">Accountingiz yo'qmi? 
-                        <a href="{% url 'register' %}" class="text-primary fw-bold text-decoration-none">Ro'yxatdan o'tish</a>
+                    <!-- Forma -->
+                    <form method="POST" id="loginForm">
+                        {% csrf_token %}
+                        
+                        <!-- Username/Email -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-secondary">
+                                <i class="fas fa-user me-2"></i>Foydalanuvchi nomi yoki Email
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-at text-muted"></i>
+                                </span>
+                                <input type="text" 
+                                       name="username" 
+                                       id="username"
+                                       class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+                                       placeholder="Foydalanuvchi nomi yoki email"
+                                       required
+                                       value="{{ form.username.value|default:'' }}">
+                                {% if form.username.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.username.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Password -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-secondary">
+                                <i class="fas fa-lock me-2"></i>Parol
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-key text-muted"></i>
+                                </span>
+                                <input type="password" 
+                                       name="password" 
+                                       id="password"
+                                       class="form-control {% if form.password.errors %}is-invalid{% endif %}"
+                                       placeholder="Parolingizni kiriting"
+                                       required>
+                                <button type="button" class="btn btn-outline-secondary toggle-password" 
+                                        id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                {% if form.password.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.password.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Remember me and Forgot password -->
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="rememberMe" name="remember_me">
+                                <label class="form-check-label small text-muted" for="rememberMe">
+                                    <i class="fas fa-check-circle me-1"></i>Meni eslab qol
+                                </label>
+                            </div>
+                            <a href="#" class="small text-primary text-decoration-none" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">
+                                <i class="fas fa-question-circle me-1"></i>Parolni unutdingizmi?
+                            </a>
+                        </div>
+
+                        <!-- Submit button -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg shadow-sm" id="loginBtn">
+                                <i class="fas fa-sign-in-alt me-2"></i>Tizimga kirish
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Divider -->
+                    <div class="position-relative text-center my-4">
+                        <hr class="my-4">
+                        <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted small">
+                            YOKI
+                        </span>
+                    </div>
+
+                    <!-- Alternative options -->
+                    <div class="text-center">
+                        <p class="text-muted mb-3">Hisobingiz yo'qmi?</p>
+                        <a href="{% url 'register' %}" class="btn btn-outline-primary btn-lg w-100">
+                            <i class="fas fa-user-plus me-2"></i>Ro'yxatdan o'tish
+                        </a>
+                    </div>
+
+                    <!-- Social login (optional) -->
+                    <div class="mt-4 text-center">
+                        <p class="small text-muted mb-3">Ijtimoiy tarmoqlar orqali kirish</p>
+                        <div class="d-flex justify-content-center gap-3">
+                            <a href="#" class="btn btn-outline-danger rounded-circle" style="width: 50px; height: 50px;">
+                                <i class="fab fa-google"></i>
+                            </a>
+                            <a href="#" class="btn btn-outline-primary rounded-circle" style="width: 50px; height: 50px;">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                            <a href="#" class="btn btn-outline-info rounded-circle" style="width: 50px; height: 50px;">
+                                <i class="fab fa-telegram"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card footer -->
+                <div class="card-footer bg-light py-3 text-center">
+                    <p class="small text-muted mb-0">
+                        <i class="fas fa-shield-alt me-1"></i>
+                        Ma'lumotlaringiz xavfsizligi biz uchun muhim
                     </p>
                 </div>
+            </div>
+
+            <!-- Additional info -->
+            <div class="text-center mt-4">
+                <p class="small text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Kirish muammolaringiz bo'lsa, <a href="mailto:support@mebelshop.uz" class="text-decoration-none">support@mebelshop.uz</a> ga murojaat qiling
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Forgot Password Modal -->
+<div class="modal fade" id="forgotPasswordModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-key me-2"></i>Parolni tiklash
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-4">
+                    Parolni tiklash uchun email manzilingizni kiriting. Sizga parolni tiklash uchun havola yuboriladi.
+                </p>
+                <form id="forgotPasswordForm">
+                    <div class="mb-3">
+                        <label class="form-label">Email manzilingiz</label>
+                        <input type="email" class="form-control" placeholder="example@mail.com" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
+                <button type="button" class="btn btn-primary" onclick="sendPasswordReset()">
+                    <i class="fas fa-paper-plane me-2"></i>Yuborish
+                </button>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    /* Django inputlarini chiroyli qilish */
-    input {
-        display: block;
-        width: 100%;
-        padding: 0.75rem 1rem;
-        border: 1px solid #dee2e6;
-        border-left: none !important;
-        border-radius: 0 10px 10px 0 !important;
+    /* Umumiy stillar */
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
     }
+    
+    /* Card styling */
+    .card {
+        transition: transform 0.3s;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+    }
+    
+    /* Input groups */
     .input-group-text {
-        border-radius: 10px 0 0 10px !important;
         border-right: none;
+        background-color: #f8f9fa;
     }
-    input:focus {
-        outline: none;
-        border-color: #0d6efd !important;
+    
+    .form-control {
+        border-left: none;
+        padding-left: 0;
+        transition: all 0.3s;
+    }
+    
+    .form-control:focus {
         box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
+        border-color: #0d6efd;
+    }
+    
+    /* Toggle password button */
+    .toggle-password {
+        border-left: none;
+        background-color: #f8f9fa;
+        border-color: #dee2e6;
+    }
+    
+    .toggle-password:hover {
+        background-color: #e9ecef;
+    }
+    
+    /* Checkbox styling */
+    .form-check-input:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    
+    /* Social buttons */
+    .btn-outline-danger, .btn-outline-primary, .btn-outline-info {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
+    }
+    
+    .btn-outline-danger:hover {
+        background-color: #dc3545;
+        color: white;
+    }
+    
+    .btn-outline-primary:hover {
+        background-color: #0d6efd;
+        color: white;
+    }
+    
+    .btn-outline-info:hover {
+        background-color: #0dcaf0;
+        color: white;
+    }
+    
+    /* Avatar wrapper */
+    .avatar-wrapper {
+        animation: bounceIn 1s;
+    }
+    
+    @keyframes bounceIn {
+        0% {
+            transform: scale(0);
+        }
+        50% {
+            transform: scale(1.1);
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .card-body {
+            padding: 1.5rem !important;
+        }
+        
+        .btn-lg {
+            padding: 0.75rem 1rem;
+        }
     }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        
+        // Parolni ko'rsatish/yashirish
+        if (togglePassword) {
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                
+                const icon = this.querySelector('i');
+                if (type === 'text') {
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+        }
+        
+        // Form yuborish
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(e) {
+                // Yuklash holatini ko'rsatish
+                if (loginBtn) {
+                    const originalText = loginBtn.innerHTML;
+                    loginBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Kirilmoqda...';
+                    loginBtn.disabled = true;
+                    
+                    // Agar xatolik bo'lsa, tugmani qayta tiklash
+                    setTimeout(() => {
+                        if (!document.querySelector('.is-invalid')) {
+                            loginBtn.innerHTML = originalText;
+                            loginBtn.disabled = false;
+                        }
+                    }, 3000);
+                }
+            });
+        }
+        
+        // Forma validatsiyasi
+        const usernameInput = document.getElementById('username');
+        if (usernameInput) {
+            usernameInput.addEventListener('blur', function() {
+                if (this.value.trim().length < 3) {
+                    this.classList.add('is-invalid');
+                } else {
+                    this.classList.remove('is-invalid');
+                }
+            });
+        }
+        
+        if (passwordInput) {
+            passwordInput.addEventListener('blur', function() {
+                if (this.value.length < 6) {
+                    this.classList.add('is-invalid');
+                } else {
+                    this.classList.remove('is-invalid');
+                }
+            });
+        }
+        
+        // Esda qolish checkbox
+        const rememberMe = document.getElementById('rememberMe');
+        if (rememberMe && localStorage.getItem('rememberUsername')) {
+            rememberMe.checked = true;
+            if (usernameInput) {
+                usernameInput.value = localStorage.getItem('rememberUsername');
+            }
+        }
+        
+        if (rememberMe) {
+            rememberMe.addEventListener('change', function() {
+                if (this.checked && usernameInput) {
+                    localStorage.setItem('rememberUsername', usernameInput.value);
+                } else {
+                    localStorage.removeItem('rememberUsername');
+                }
+            });
+        }
+    });
+    
+    // Parolni tiklash funksiyasi
+    function sendPasswordReset() {
+        const emailInput = document.querySelector('#forgotPasswordForm input[type="email"]');
+        if (emailInput && emailInput.value) {
+            // Bu yerda AJAX so'rov yuboriladi
+            alert('Parolni tiklash havolasi ' + emailInput.value + ' manziliga yuborildi.');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal'));
+            modal.hide();
+        } else {
+            alert('Iltimos, email manzilingizni kiriting.');
+        }
+    }
+    
+    // Enter tugmasi bilan login
+    document.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+            const activeElement = document.activeElement;
+            if (activeElement.tagName === 'INPUT' && !activeElement.closest('#forgotPasswordModal')) {
+                e.preventDefault();
+                const loginForm = document.getElementById('loginForm');
+                if (loginForm) {
+                    loginForm.dispatchEvent(new Event('submit'));
+                }
+            }
+        }
+    });
+</script>
+
 {% endblock %}

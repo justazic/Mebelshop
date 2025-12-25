@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Izohni tahrirlash{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pt-4">
+                    <h4 class="fw-bold text-primary mb-0">
+                        <i class="fas fa-edit me-2"></i>Izohni tahrirlash
+                    </h4>
+                    <hr class="text-muted opacity-25">
+                </div>
+                
+                <div class="card-body px-4 pb-4">
+                    <div class="d-flex align-items-center mb-4 p-2 bg-light rounded-3">
+                        {% if comment.product.image %}
+                            <img src="{{ comment.product.image.url }}" class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                        {% endif %}
+                        <div>
+                            <small class="text-muted d-block">Mahsulot:</small>
+                            <span class="fw-bold text-dark">{{ comment.product.name }}</span>
+                        </div>
+                    </div>
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="comment_text" class="form-label fw-bold text-secondary">Izoh matni</label>
+                            <textarea 
+                                name="text" 
+                                id="comment_text" 
+                                class="form-control border-2 shadow-none focus-primary" 
+                                rows="5" 
+                                placeholder="Fikringizni yozing..."
+                                required>{{ comment.text }}</textarea>
+                            {% if error %}
+                                <div class="text-danger small mt-2">
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg fw-bold shadow-sm">
+                                <i class="fas fa-save me-2"></i>O'zgarishlarni saqlash
+                            </button>
+                            <a href="{% url 'profile' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Bekor qilish
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <p class="text-muted small">
+                    <i class="fas fa-info-circle me-1"></i> 
+                    Izohingizni tahrirlaganingizdan so'ng u darhol yangilanadi.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+
+    .card {
+        border-radius: 15px;
+    }
+
+    .form-control {
+        border-radius: 10px;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-control:focus {
+        border-color: #0d6efd;
+        background-color: #fff;
+    }
+
+    .btn {
+        border-radius: 10px;
+        padding: 10px 20px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3) !important;
+    }
+</style>
+{% endblock %}

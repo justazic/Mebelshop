@@ -1,106 +1,208 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Mening profilim{% endblock %}
+{% block title %}Mening profilim | {{ user.username }}{% endblock %}
 
 {% block content %}
-<div class="container mt-4 mb-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-11">
-            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-                <div class="row g-0">
-                    
-                    <div class="col-md-4 bg-light d-flex flex-column align-items-center justify-content-center p-5 border-end text-center">
-                        <div class="position-relative mb-4">
-                            {% if user.image %}
-                                <img src="{{ user.image.url }}" class="rounded-circle shadow border border-4 border-white" 
-                                     style="width: 180px; height: 180px; object-fit: cover;">
-                            {% else %}
-                                <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white shadow" 
-                                     style="width: 180px; height: 180px; font-size: 4.5rem; font-weight: bold;">
-                                    {{ user.username|first|upper }}
-                                </div>
-                            {% endif %}
-                        </div>
-                        
-                        <h3 class="fw-bold text-dark mb-1">{{ user.username }}</h3>
-                        <p class="text-muted mb-3">{{ user.email|default:"Email kiritilmagan" }}</p>
-                        
-                        <div class="d-flex gap-2 mb-4 justify-content-center">
-                            <span class="badge bg-primary rounded-pill px-3 py-2">Foydalanuvchi</span>
-                            {% if user.is_staff %}
-                                <span class="badge bg-danger rounded-pill px-3 py-2">Admin</span>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="w-100 mt-2">
-                            <div class="p-3 bg-white rounded-3 shadow-sm border-start border-4 border-primary text-start">
-                                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">📍 Manzil:</small>
-                                <span class="text-dark">{{ user.address|default:"Manzil kiritilmagan" }}</span>
+<div class="container py-5">
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm sticky-top" style="top: 20px; z-index: 1000;">
+                <div class="card-body p-4 text-center">
+                    <div class="position-relative d-inline-block mb-4">
+                        {% if user.image %}
+                            <img src="{{ user.image.url }}" 
+                                class="rounded-circle border border-4 border-white shadow"
+                                style="width: 150px; height: 150px; object-fit: cover;">
+                        {% elif user.profile_image %}
+                            <img src="{{ user.profile_image.url }}" 
+                                class="rounded-circle border border-4 border-white shadow"
+                                style="width: 150px; height: 150px; object-fit: cover;">
+                        {% else %}
+                            <div class="rounded-circle border border-4 border-white bg-primary bg-opacity-10 d-flex align-items-center justify-content-center shadow"
+                                style="width: 150px; height: 150px;">
+                                <span class="display-3 text-primary fw-bold">{{ user.username|first|upper }}</span>
+                            </div>
+                        {% endif %}
+
+                        <form method="POST" enctype="multipart/form-data" id="profile-image-form" class="position-absolute bottom-0 end-0">
+                            {% csrf_token %}
+                            <label for="image-upload" class="btn btn-primary btn-sm rounded-circle shadow-sm d-flex align-items-center justify-content-center" 
+                                style="width: 40px; height: 40px; cursor: pointer; border: 3px solid #fff;">
+                                <i class="fas fa-camera"></i>
+                            </label>
+                            <input type="file" id="image-upload" name="image" accept="image/*" class="d-none" onchange="document.getElementById('profile-image-form').submit()">
+                        </form>
+                    </div>
+
+                    <h4 class="fw-bold mb-1">{{ user.get_full_name|default:user.username }}</h4>
+                    <p class="text-muted small mb-4">
+                        <i class="fas fa-envelope me-1"></i>{{ user.email|default:"Email kiritilmagan" }}
+                    </p>
+
+                    <div class="row g-2 mb-4">
+                        <div class="col-6">
+                            <div class="bg-light p-3 rounded-3">
+                                <h5 class="fw-bold mb-0 text-primary">{{ user_products_count }}</h5>
+                                <small class="text-muted text-uppercase" style="font-size: 0.7rem; letter-spacing: 1px;">E'lonlar</small>
                             </div>
                         </div>
-
-                        <div class="mt-4">
-                            <a href="{% url 'change_password' %}" class="btn btn-outline-danger btn-sm rounded-pill px-4">
-                                🔐 Parolni o'zgartirish
-                            </a>
+                        <div class="col-6">
+                            <div class="bg-light p-3 rounded-3">
+                                <h5 class="fw-bold mb-0 text-info">{{ user_comments|length }}</h5>
+                                <small class="text-muted text-uppercase" style="font-size: 0.7rem; letter-spacing: 1px;">Izohlar</small>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="col-md-8 bg-white">
-                        <div class="card-body p-4 p-md-5">
-                            <div class="d-flex justify-content-between align-items-center mb-4">
-                                <div>
-                                    <h2 class="fw-bold text-primary mb-1">Profilni tahrirlash</h2>
-                                    <p class="text-muted small">Ma'lumotlaringizni yangilab turing</p>
-                                </div>
-                                <a href="{% url 'home' %}" class="btn btn-light btn-sm rounded-circle p-2 shadow-sm" title="Bosh sahifa">
-                                    🏠
-                                </a>
-                            </div>
-                            
-                            <hr class="mb-4 opacity-50">
-                            
-                            <form method="POST" enctype="multipart/form-data" novalidate>
-                                {% csrf_token %}
-                                
-                                <div class="row">
-                                    {% for field in form %}
-                                    <div class="{% if field.name == 'image' or field.name == 'address' %}col-12{% else %}col-md-6{% endif %} mb-4">
-                                        <label for="{{ field.id_for_label }}" class="form-label fw-bold text-secondary small text-uppercase ms-1">
-                                            {{ field.label }}
-                                        </label>
-                                        
-                                        <div class="input-group">
-                                            <span class="input-group-text bg-light border-end-0 text-muted">
-                                                {% if field.name == 'username' %}👤
-                                                {% elif field.name == 'email' %}📧
-                                                {% elif field.name == 'address' %}📍
-                                                {% elif field.name == 'image' %}🖼️
-                                                {% else %}📝{% endif %}
-                                            </span>
-                                            
-                                            {{ field }}
+                    <div class="text-start mb-4">
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span class="text-muted"><i class="far fa-calendar-alt me-2"></i>A'zo bo'ldi:</span>
+                            <span class="fw-medium">{{ user.date_joined|date:"d-M, Y" }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between small">
+                            <span class="text-muted"><i class="far fa-clock me-2"></i>Oxirgi faollik:</span>
+                            <span class="fw-medium">{{ user.last_login|date:"d.m.Y H:i" }}</span>
+                        </div>
+                    </div>
 
-                                            {% if field.errors %}
-                                                <div class="invalid-feedback d-block">
-                                                    {{ field.errors|striptags }}
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'edit_profile' %}" class="btn btn-outline-primary border-2 fw-bold py-2">
+                            <i class="fas fa-user-edit me-2"></i>Profilni tahrirlash
+                        </a>
+                        <a href="{% url 'add_product' %}" class="btn btn-success fw-bold py-2">
+                            <i class="fas fa-plus-circle me-2"></i>Yangi mebel
+                        </a>
+                        <hr class="my-2">
+                        <a href="{% url 'logout' %}" class="btn btn-link text-danger btn-sm text-decoration-none">
+                            <i class="fas fa-sign-out-alt me-1"></i>Tizimdan chiqish
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 p-0">
+                    <ul class="nav nav-tabs nav-fill border-0" id="profileTabs" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active py-3 fw-bold text-uppercase" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" type="button">
+                                <i class="fas fa-couch me-2"></i>Mening mebellarim
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link py-3 fw-bold text-uppercase" id="comments-tab" data-bs-toggle="tab" data-bs-target="#comments" type="button">
+                                <i class="fas fa-comments me-2"></i>Mening izohlarim
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="card-body p-4">
+                    <div class="tab-content" id="profileTabsContent">
+                        <div class="tab-pane fade show active" id="products" role="tabpanel">
+                            {% if user_products %}
+                                <div class="row row-cols-1 row-cols-md-2 g-4">
+                                    {% for product in user_products %}
+                                    <div class="col">
+                                        <div class="card h-100 product-card border-0 shadow-sm overflow-hidden">
+                                            <div class="position-relative">
+                                                {% if product.image %}
+                                                    <img src="{{ product.image.url }}" class="card-img-top" style="height: 200px; object-fit: cover;">
+                                                {% else %}
+                                                    <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                                        <i class="fas fa-couch fa-3x text-secondary"></i>
+                                                    </div>
+                                                {% endif %}
+                                                <div class="position-absolute top-0 end-0 p-2">
+                                                    <span class="badge bg-dark bg-opacity-75 shadow-sm">{{ product.category.name|default:"Mebel" }}</span>
                                                 </div>
-                                            {% endif %}
+                                            </div>
+                                            <div class="card-body">
+                                                <h6 class="fw-bold text-dark">{{ product.name|truncatechars:35 }}</h6>
+                                                <h5 class="text-primary fw-bold mb-3">{{ product.price }} so'm</h5>
+                                                
+                                                <div class="d-flex gap-2">
+                                                    <a href="{% url 'product_detail' product.pk %}" class="btn btn-sm btn-light flex-grow-1 border">
+                                                        <i class="fas fa-eye text-muted me-1"></i>Ko'rish
+                                                    </a>
+                                                    <a href="{% url 'edit_product' product.pk %}" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <a href="{% url 'delete_product' product.pk %}" 
+                                                       class="btn btn-sm btn-outline-danger" 
+                                                       onclick="return confirm('Haqiqatan ham o\'chirmoqchimisiz?')">
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     {% endfor %}
                                 </div>
-
-                                <div class="mt-4">
-                                    <button type="submit" class="btn btn-primary btn-lg rounded-3 shadow py-3 px-5 fw-bold w-100">
-                                        💾 O'zgarishlarni saqlash
-                                    </button>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <img src="https://cdn-icons-png.flaticon.com/512/4076/4076432.png" style="width: 100px; opacity: 0.5;" class="mb-3">
+                                    <h5 class="text-muted fw-bold">Hozircha e'lonlar yo'q</h5>
+                                    <p class="text-muted small mb-4">Sotmoqchi bo'lgan mebellaringizni shu yerda e'lon qiling.</p>
+                                    <a href="{% url 'add_product' %}" class="btn btn-primary px-4">E'lon qo'shish</a>
                                 </div>
-                            </form>
+                            {% endif %}
+                        </div>
+
+                        <div class="tab-pane fade" id="comments" role="tabpanel">
+                            {% if user_comments %}
+                                <div class="list-group list-group-flush">
+                                    {% for comment in user_comments %}
+                                    <div class="list-group-item px-0 py-3 border-0 border-bottom">
+                                        <div class="d-flex align-items-start">
+                                            {% if comment.product.image %}
+                                                <img src="{{ comment.product.image.url }}" class="rounded me-3 shadow-sm" style="width: 60px; height: 60px; object-fit: cover;">
+                                            {% else %}
+                                                <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                                    <i class="fas fa-couch text-muted"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <a href="{% url 'product_detail' comment.product.pk %}" class="fw-bold text-dark text-decoration-none">
+                                                        {{ comment.product.name }}
+                                                    </a>
+                                                    
+                                                    <div class="btn-group">
+                                                        <a href="{% url 'edit_comment' comment.pk %}" class="btn btn-sm btn-outline-primary border-0" title="Tahrirlash">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <a href="{% url 'delete_comment' comment.pk %}" 
+                                                           class="btn btn-sm btn-outline-danger border-0" 
+                                                           onclick="return confirm('Izohni o\'chirmoqchimisiz?')" 
+                                                           title="O'chirish">
+                                                            <i class="fas fa-trash"></i>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                                <p class="mb-0 text-muted small bg-light p-2 rounded italic">
+                                                    <i class="fas fa-quote-left me-2 opacity-50"></i>{{ comment.text }}
+                                                </p>
+                                                <small class="text-muted" style="font-size: 0.7rem;">
+                                                    <i class="far fa-clock me-1"></i>{{ comment.created_at|date:"d.m.Y H:i" }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-comment-dots fa-3x text-light bg-info p-4 rounded-circle mb-3"></i>
+                                    <h5 class="text-muted fw-bold">Sizda hali izohlar yo'q</h5>
+                                    <p class="text-muted small mb-4">Mebellarga o'z fikringizni bildiring va bu yerda ko'ring.</p>
+                                    <a href="{% url 'home' %}" class="btn btn-outline-info px-4">Mebellarni ko'rish</a>
+                                </div>
+                            {% endif %}
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -108,46 +210,35 @@
 </div>
 
 <style>
-    /* Django generatsiya qilgan inputlarni chiroyli qilish */
-    input, select, textarea {
-        display: block;
-        width: 100%;
-        padding: 0.75rem 1rem;
-        font-size: 1rem;
-        color: #212529;
-        background-color: #fff;
-        border: 1px solid #dee2e6;
-        border-left: none !important;
-        border-radius: 0 12px 12px 0 !important;
-        transition: all 0.2s;
-    }
+    body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .card { border-radius: 15px; }
+    
+    .nav-tabs .nav-link { color: #6c757d; border: none; border-bottom: 3px solid transparent; transition: 0.3s; }
+    .nav-tabs .nav-link.active { color: #0d6efd; border-bottom: 3px solid #0d6efd; background: none; }
+    .nav-tabs .nav-link:hover { background-color: #f8f9fa; }
 
-    input:focus {
-        outline: none;
-        border-color: #0d6efd !important;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
-        background-color: #f8fbff;
-    }
+    .product-card { transition: transform 0.2s, box-shadow 0.2s; border: 1px solid #eee !important; }
+    .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important; }
 
-    .input-group-text {
-        border-radius: 12px 0 0 12px !important;
-        border: 1px solid #dee2e6;
-        background-color: #f8f9fa;
-    }
+    .btn { border-radius: 8px; transition: 0.3s; }
+    .italic { font-style: italic; }
+    
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #bbb; }
 
-    /* Rasm tanlash tugmasi */
-    input[type="file"]::file-selector-button {
-        background-color: #e9ecef;
-        border: 1px solid #ced4da;
-        border-radius: 6px;
-        padding: 4px 10px;
-        margin-right: 10px;
-        cursor: pointer;
-        font-size: 0.85rem;
-    }
-
-    .card {
-        border-radius: 1.5rem !important;
+    @media (max-width: 768px) {
+        .sticky-top { position: static !important; }
+        .nav-link { font-size: 0.8rem; padding: 10px 5px !important; }
     }
 </style>
+
+<script>
+    document.getElementById('image-upload')?.addEventListener('change', function() {
+        const label = this.previousElementSibling;
+        label.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        label.classList.add('disabled');
+    });
+</script>
 {% endblock %}

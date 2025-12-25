@@ -1,5 +1,5 @@
 from django import forms
-from .models import Product, Category
+from .models import Product, Category, Comment
 
 
 class ProductForm(forms.ModelForm):
@@ -14,3 +14,11 @@ class CategoryForm(forms.ModelForm):
         model = Category
         fields = ['name', 'description']
         labels = {'name': 'Kategoriya nomi','description': "Tavsifi"}     
+        
+
+class CommentForm(forms.ModelForm):
+    rate = forms.IntegerField(min_value=0,max_value=5, required=0)
+    class Meta:
+        model = Comment
+        fields = ['text', 'rate', 'image_comment']
+        
